@@ -1,0 +1,153 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../../src/generated/prisma"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  accounts      Account[]
+  Comment       Comment[]
+  sessions      Session[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Movie {
+  id                Int                 @id @default(autoincrement())
+  title             String
+  description       String
+  posterUrl         String
+  rating            Float
+  createdAt         DateTime
+  updatedAt         DateTime
+  dateDeSortie      DateTime
+  Comment           Comment[]
+  bandeAnnonce      String?
+  plateformId       Int?
+  plateform         Platform?           @relation(fields: [plateformId], references: [id], onDelete: Cascade)
+  CategoryByContent CategoryByContent[]
+
+  @@map("movie")
+}
+
+model Series {
+  id                Int                 @id @default(autoincrement())
+  title             String
+  description       String
+  posterUrl         String
+  rating            Float
+  createdAt         DateTime
+  updatedAt         DateTime
+  Comment           Comment[]
+  bandeAnnonce      String?
+  plateformId       Int?
+  plateform         Platform?           @relation(fields: [plateformId], references: [id], onDelete: Cascade)
+  CategoryByContent CategoryByContent[]
+
+  @@map("series")
+}
+
+model Platform {
+  id      Int      @id @default(autoincrement())
+  title   String
+  appIcon String
+  Series  Series[]
+  Movie   Movie[]
+
+  @@map("platform")
+}
+
+model CategoryByContent {
+  id         Int      @id @default(autoincrement())
+  movieId    Int?
+  seriesId   Int?
+  categoryId Int
+  movie      Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series     Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_by_content")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  rating    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  movieId   Int?
+  seriesId  Int?
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series    Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comment")
+}
+
+model Category {
+  id                Int                 @id @default(autoincrement())
+  title             String
+  image             String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  CategoryByContent CategoryByContent[]
+
+  @@map("category")
+}
